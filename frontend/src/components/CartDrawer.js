@@ -70,7 +70,7 @@ const triggerOtpVerification = (mobile) => {
     window.initSendOTP({
       widgetId: "36646e684d57323330313635",
       tokenAuth: "508408Tl99Q27rW69ddfe00P1",
-      identifier: mobile,
+      identifier: "91" + mobile,
 
       success: async (data) => {
         await axios.post(`${API}/verify-phone`, {
