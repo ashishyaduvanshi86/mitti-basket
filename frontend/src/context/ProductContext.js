@@ -39,32 +39,16 @@ export function ProductProvider({ children }) {
       const festive = notHidden(data.festive);
       const gardenArr = notHidden(data.secret_garden);
 
-      const garden =
-        gardenArr.length > 0
-          ? gardenArr[0]
-          : staticGarden;
-
-      const featured =
-        pantry.length > 0
-          ? pantry.slice(0, 4)
-          : staticFeatured;
-
       setProducts({
-        seasonHarvest:
-          season.length > 0 ? season : staticSeason,
-
-        villagePantry:
-          pantry.length > 0 ? pantry : staticPantry,
-
-        festiveCollection:
-          festive.length > 0 ? festive : staticFestive,
-
-        secretGardenBox: garden,
-
-        featuredPantry: featured,
-
+        seasonHarvest: season,
+        villagePantry: pantry,
+        festiveCollection: festive,
+        secretGardenBox:
+          gardenArr.length > 0 ? gardenArr[0] : null,
+        featuredPantry: pantry.slice(0, 4),
         loaded: true,
       });
+
     } catch (err) {
       console.error("Product fetch failed:", err);
 
