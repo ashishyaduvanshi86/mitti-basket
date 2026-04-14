@@ -257,14 +257,14 @@ setTimeout(() => {
 <Sheet
   modal={false}
   open={open}
-  onOpenChange={(v) => {
-    if (!v) return;
-    onOpenChange(v);
-  }}
->      <SheetContent
-        side="right"
-        className="bg-[#FAF7F2] w-[340px] sm:w-[420px] border-l border-[#3A5A40]/10 p-0 flex flex-col"
-      >
+  onOpenChange={onOpenChange}
+>     
+<SheetContent
+  side="right"
+  onInteractOutside={(e) => e.preventDefault()}
+  onEscapeKeyDown={(e) => e.preventDefault()}
+  className="bg-[#FAF7F2] ..."
+>
         <SheetTitle className="sr-only">Shopping Cart</SheetTitle>
 
         {/* ── CART VIEW ── */}
