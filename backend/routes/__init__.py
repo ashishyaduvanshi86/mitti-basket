@@ -13,6 +13,8 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+verified_phones = db["verified_phones"]
+verified_phones.create_index("phone", unique=True)
 
 # Env vars
 BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')

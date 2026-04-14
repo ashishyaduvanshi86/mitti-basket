@@ -1,26 +1,39 @@
 from fastapi import APIRouter, HTTPException
-from routes import db
+from routes import verified_phones
+from datetime import datetime
 
 router = APIRouter()
 
 
 @router.post("/verify-phone")
 async def verify_phone(payload: dict):
+    token = payload.get("token")
+    phone = payload.get("phone")
 
-    phone = payload.get("mobile")
+    if not token or not phone:
+        raise HTTPException(status_code=400, detail="Token and phone required")
 
-    if not phone:
-        raise HTTPException(status_code=400, detail="Phone missing")
+    # TODO: optional — verify token with MSG91 if needed later
 
-    db.users.update_one(
+    verified_phones.update_one(
         {"phone": phone},
         {
             "$set": {
-                "phone": phone,
-                "phone_verified": True
+                "verified": True,
+                "verified_at": datetime.utcnow(),
             }
         },
-        upsert=True
+        upsert=True,
     )
 
-    return {"message": "Phone verified successfully"}
+    return {"status": "verified"}
+@router.post("/check-phone-verified")
+async def check_phone_verified(payload: dict):
+    phone = payload.get("phone")
+
+    if not phone:
+        return {"verified": False}
+
+    record = verified_phones.find_one({"phone": phone})
+
+    return {"verified": bool(record)}

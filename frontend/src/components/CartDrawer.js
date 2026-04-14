@@ -3,10 +3,13 @@ import { X, Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Check, CreditCard, Load
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/context/CartContext";
 import axios from "axios";
+import { useRef } from "react";
+
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 export default function CartDrawer({ open, onOpenChange }) {
+  const otpTimer = useRef(null);
   const { items, updateQuantity, removeItem, clearCart, subtotal, fmtQty, getItemPrice } = useCart();
   const [view, setView] = useState("cart");
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", pincode: "", city: "" });
@@ -47,6 +50,15 @@ export default function CartDrawer({ open, onOpenChange }) {
   }
 }, []);
 
+useEffect(() => {
+  const savedPhone = localStorage.getItem("verified_phone");
+
+  if (savedPhone) {
+    setForm((prev) => ({ ...prev, phone: savedPhone }));
+    setPhoneVerified(true);
+  }
+}, []);
+
   const loadRazorpayScript = () =>
     new Promise((resolve) => {
       if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
@@ -71,13 +83,16 @@ const triggerOtpVerification = (mobile) => {
       widgetId: "36646e684d57323330313635",
       tokenAuth: "508408Tl99Q27rW69ddfe00P1",
       identifier: "91" + mobile,
+      countryCode: "91",
 
       success: async (data) => {
         await axios.post(`${API}/verify-phone`, {
           token: data.token,
+          phone: mobile,
         });
 
         setPhoneVerified(true);
+        localStorage.setItem("verified_phone", mobile);
       },
 
       failure: () => {
@@ -227,9 +242,6 @@ if (!window.Razorpay) {
   return;
 }
 
-      onOpenChange(false);
-      document.body.style.overflow = "auto";
-
 setTimeout(() => {
   const rzp = new window.Razorpay(options);
   rzp.open();
@@ -248,8 +260,13 @@ setTimeout(() => {
   };
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) resetAndClose(); else onOpenChange(v); }}>
-      <SheetContent
+<Sheet
+  open={open}
+  onOpenChange={(v) => {
+    if (!v) return; // ignore outside clicks
+    onOpenChange(v);
+  }}
+>      <SheetContent
         side="right"
         className="bg-[#FAF7F2] w-[340px] sm:w-[420px] border-l border-[#3A5A40]/10 p-0 flex flex-col"
       >
@@ -372,17 +389,26 @@ setTimeout(() => {
 
       setForm({ ...form, phone: value });
 
-      if (value.length === 10 && !otpTriggered) {
-        const alreadyVerified = await checkIfPhoneAlreadyVerified(value);
+if (value.length < 10) {
+  setOtpTriggered(false);
+}
 
-        if (alreadyVerified) {
-          setPhoneVerified(true);
-          return;
-        }
+clearTimeout(otpTimer.current);
 
-        setOtpTriggered(true);
-        triggerOtpVerification(value);
-      }
+otpTimer.current = setTimeout(async () => {
+  if (value.length === 10 && !otpTriggered) {
+    const alreadyVerified = await checkIfPhoneAlreadyVerified(value);
+
+    if (alreadyVerified) {
+      setPhoneVerified(true);
+      localStorage.setItem("verified_phone", value);
+      return;
+    }
+
+    setOtpTriggered(true);
+    triggerOtpVerification(value);
+  }
+}, 400);
     }}
     className="w-full mt-1.5 bg-white border border-[#3A5A40]/10 px-4 py-2.5 font-inter text-sm text-[#1A1A1A] focus:outline-none focus:border-[#3A5A40]/30 transition-colors"
     placeholder="10-digit phone number"
