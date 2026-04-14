@@ -32,6 +32,10 @@ body {
     color: #1A1A1A;
     overflow-x: hidden;
 }
+#msg91-overlay,
+#verify-modal {
+  z-index: 999999 !important;
+}
 
 ::selection {
     background-color: rgba(221, 184, 146, 0.4);

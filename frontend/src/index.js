@@ -9,6 +9,7 @@ const BUILD_VERSION = process.env.REACT_APP_BUILD_VERSION || "dev";
 
 const storedVersion = localStorage.getItem("app_version");
 
+
 if (storedVersion !== BUILD_VERSION) {
   localStorage.setItem("app_version", BUILD_VERSION);
 

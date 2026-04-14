@@ -42,12 +42,12 @@ export default function CartDrawer({ open, onOpenChange }) {
     .catch(() => {});
 
   // Load MSG91 OTP script once
-  if (!document.querySelector('script[src="https://verify.msg91.com/otp-provider.js"]')) {
-    const script = document.createElement("script");
-    script.src = "https://verify.msg91.com/otp-provider.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }
+ if (!document.querySelector('script[src="https://verify.msg91.com/otp-provider.js"]')) {
+  const script = document.createElement("script");
+  script.src = "https://verify.msg91.com/otp-provider.js";
+  script.async = true;
+  document.body.appendChild(script);
+}
 }, []);
 
 useEffect(() => {
@@ -74,33 +74,32 @@ useEffect(() => {
 
 const triggerOtpVerification = (mobile) => {
   const attemptInit = () => {
-    if (!window.initSendOTP) {
-      setTimeout(attemptInit, 300);
-      return;
-    }
+  if (!window.initSendOTP) {
+    setTimeout(attemptInit, 300);
+    return;
+  }
 
-    window.initSendOTP({
-      widgetId: "36646e684d57323330313635",
-      tokenAuth: "508408Tl99Q27rW69ddfe00P1",
-      identifier: "91" + mobile,
-      countryCode: "91",
+  window.initSendOTP({
+    widgetId: "36646e684d57323330313635",
+    tokenAuth: "508408Tl99Q27rW69ddfe00P1",
+    identifier: "91" + mobile,
+    countryCode: "91",
 
-      success: async (data) => {
-        await axios.post(`${API}/verify-phone`, {
-          token: data.token,
-          phone: mobile,
-        });
+    success: async (data) => {
+      await axios.post(`${API}/verify-phone`, {
+        token: data.token,
+        phone: mobile,
+      });
 
-        setPhoneVerified(true);
-        localStorage.setItem("verified_phone", mobile);
-      },
+      setPhoneVerified(true);
+      localStorage.setItem("verified_phone", mobile);
+    },
 
-      failure: () => {
-        alert("OTP verification failed");
-        setOtpTriggered(false);
-      },
-    });
-  };
+    failure: () => {
+      setOtpTriggered(false);
+    },
+  });
+};
 
   attemptInit();
 };
