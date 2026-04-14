@@ -40,14 +40,6 @@ export default function CartDrawer({ open, onOpenChange }) {
       });
     })
     .catch(() => {});
-
-  // Load MSG91 OTP script once
- if (!document.querySelector('script[src="https://verify.msg91.com/otp-provider.js"]')) {
-  const script = document.createElement("script");
-  script.src = "https://verify.msg91.com/otp-provider.js";
-  script.async = true;
-  document.body.appendChild(script);
-}
 }, []);
 
 useEffect(() => {
@@ -77,6 +69,9 @@ const triggerOtpVerification = (mobile) => {
   if (!window.initSendOTP) {
     setTimeout(attemptInit, 300);
     return;
+  }
+  if (document.getElementById("verify-modal")) {
+  return;
   }
 
   window.initSendOTP({
@@ -260,9 +255,10 @@ setTimeout(() => {
 
   return (
 <Sheet
+  modal={false}
   open={open}
   onOpenChange={(v) => {
-    if (!v) return; // ignore outside clicks
+    if (!v) return;
     onOpenChange(v);
   }}
 >      <SheetContent
@@ -390,6 +386,7 @@ setTimeout(() => {
 
 if (value.length < 10) {
   setOtpTriggered(false);
+  setPhoneVerified(false);
 }
 
 clearTimeout(otpTimer.current);

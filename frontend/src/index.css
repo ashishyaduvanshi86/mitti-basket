@@ -32,11 +32,14 @@ body {
     color: #1A1A1A;
     overflow-x: hidden;
 }
+/* Ensure MSG91 popup stays above Sheet overlay */
+#verify-modal,
 #msg91-overlay,
-#verify-modal {
+.msg91-overlay,
+.msg91-widget {
   z-index: 999999 !important;
+  pointer-events: auto !important;
 }
-
 ::selection {
     background-color: rgba(221, 184, 146, 0.4);
     color: #1A1A1A;

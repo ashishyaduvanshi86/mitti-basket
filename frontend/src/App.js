@@ -28,6 +28,7 @@ import AdminCustomers from "@/pages/admin/AdminCustomers";
 import AdminSubscribers from "@/pages/admin/AdminSubscribers";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminBroadcast from "@/pages/admin/AdminBroadcast";
+import { useEffect } from "react";
 
 function AppContent() {
   const location = useLocation();
@@ -91,6 +92,18 @@ function AppContent() {
 }
 
 function App() {
+
+  useEffect(() => {
+  if (!window.location.pathname.startsWith("/admin")) {
+    if (!document.querySelector('script[src="https://verify.msg91.com/otp-provider.js"]')) {
+      const script = document.createElement("script");
+      script.src = "https://verify.msg91.com/otp-provider.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }
+}, []);
+
   return (
     <HelmetProvider>
       <BrowserRouter>
