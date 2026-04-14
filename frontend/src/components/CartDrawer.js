@@ -14,19 +14,38 @@ export default function CartDrawer({ open, onOpenChange }) {
   const [razorpayKeyId, setRazorpayKeyId] = useState("");
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [minOrderSettings, setMinOrderSettings] = useState({ enabled: true, value: 1200 });
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpTriggered, setOtpTriggered] = useState(false);
 
   const fmtPrice = (val) => val.toLocaleString("en-IN");
   const getIncrementStep = (item) => (item.qtyUnit === "gm" ? 250 : 1);
 
   useEffect(() => {
-    axios.get(`${API}/razorpay-key`).then((r) => setRazorpayKeyId(r.data.key_id)).catch(() => {});
-    axios.get(`${API}/settings/public`).then((r) => {
+  // Load Razorpay key
+  axios
+    .get(`${API}/razorpay-key`)
+    .then((r) => setRazorpayKeyId(r.data.key_id))
+    .catch(() => {});
+
+  // Load minimum order settings
+  axios
+    .get(`${API}/settings/public`)
+    .then((r) => {
       setMinOrderSettings({
         enabled: r.data.minimum_order_enabled,
         value: r.data.minimum_order_value || 1200,
       });
-    }).catch(() => {});
-  }, []);
+    })
+    .catch(() => {});
+
+  // Load MSG91 OTP script once
+  if (!document.querySelector('script[src="https://verify.msg91.com/otp-provider.js"]')) {
+    const script = document.createElement("script");
+    script.src = "https://verify.msg91.com/otp-provider.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }
+}, []);
 
   const loadRazorpayScript = () =>
     new Promise((resolve) => {
@@ -41,9 +60,53 @@ export default function CartDrawer({ open, onOpenChange }) {
       document.body.appendChild(script);
     });
 
+const triggerOtpVerification = (mobile) => {
+  const attemptInit = () => {
+    if (!window.initSendOTP) {
+      setTimeout(attemptInit, 300);
+      return;
+    }
+
+    window.initSendOTP({
+      widgetId: "36646e684d57323330313635",
+      tokenAuth: "508408Tl99Q27rW69ddfe00P1",
+      identifier: mobile,
+
+      success: async (data) => {
+        await axios.post(`${API}/verify-phone`, {
+          token: data.token,
+        });
+
+        setPhoneVerified(true);
+      },
+
+      failure: () => {
+        alert("OTP verification failed");
+        setOtpTriggered(false);
+      },
+    });
+  };
+
+  attemptInit();
+};
+
+const checkIfPhoneAlreadyVerified = async (phone) => {
+  try {
+    const res = await axios.post(`${API}/check-phone-verified`, { phone });
+    return res.data.verified;
+  } catch {
+    return false;
+  }
+};
   const handleCheckout = async (e) => {
     e.preventDefault();
+    if (!phoneVerified) {
+  alert("Please verify your mobile number before placing order");
+  setSubmitting(false);
+  return;
+}
     setSubmitting(true);
+    
 
     try {
       const itemsForApi = items.map((item) => ({
@@ -295,10 +358,56 @@ setTimeout(() => {
                     placeholder="Your full name" data-testid="checkout-name" />
                 </div>
                 <div>
-                  <label className="font-inter text-[10px] uppercase tracking-[0.15em] text-[#4B5563] font-medium">Phone Number *</label>
-                  <input type="tel" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full mt-1.5 bg-white border border-[#3A5A40]/10 px-4 py-2.5 font-inter text-sm text-[#1A1A1A] focus:outline-none focus:border-[#3A5A40]/30 transition-colors"
-                    placeholder="10-digit phone number" data-testid="checkout-phone" />
+  <label className="font-inter text-[10px] uppercase tracking-[0.15em] text-[#4B5563] font-medium">
+    Phone Number *
+  </label>
+
+  <input
+    type="tel"
+    required
+    value={form.phone}
+    disabled={phoneVerified}
+    onChange={async (e) => {
+      const value = e.target.value.replace(/\D/g, "");
+
+      setForm({ ...form, phone: value });
+
+      if (value.length === 10 && !otpTriggered) {
+        const alreadyVerified = await checkIfPhoneAlreadyVerified(value);
+
+        if (alreadyVerified) {
+          setPhoneVerified(true);
+          return;
+        }
+
+        setOtpTriggered(true);
+        triggerOtpVerification(value);
+      }
+    }}
+    className="w-full mt-1.5 bg-white border border-[#3A5A40]/10 px-4 py-2.5 font-inter text-sm text-[#1A1A1A] focus:outline-none focus:border-[#3A5A40]/30 transition-colors"
+    placeholder="10-digit phone number"
+    data-testid="checkout-phone"
+  />
+
+  {phoneVerified && (
+    <div className="mt-2 flex items-center gap-3">
+      <span className="text-green-600 font-semibold text-xs">
+        Verified ✓
+      </span>
+
+      <button
+        type="button"
+        className="text-xs underline"
+        onClick={() => {
+          setPhoneVerified(false);
+          setOtpTriggered(false);
+          setForm({ ...form, phone: "" });
+        }}
+      >
+        Change number
+      </button>
+    </div>
+  )}
                 </div>
                 <div>
                   <label className="font-inter text-[10px] uppercase tracking-[0.15em] text-[#4B5563] font-medium">Email *</label>
