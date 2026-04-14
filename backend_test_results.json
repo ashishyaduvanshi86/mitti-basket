@@ -1,0 +1,94 @@
+{
+  "summary": {
+    "total_tests": 5,
+    "passed_tests": 5,
+    "success_rate": "100.0%"
+  },
+  "test_results": [
+    {
+      "test_name": "API Root",
+      "method": "GET",
+      "endpoint": "",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "response_data": {
+        "message": "Mitti Basket API"
+      },
+      "error": null
+    },
+    {
+      "test_name": "Create Waitlist Entry (subscription)",
+      "method": "POST",
+      "endpoint": "waitlist",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "response_data": {
+        "id": "c1eb4219-583d-4229-a1a6-06a5413ceffd",
+        "email": "test_135342@example.com",
+        "name": "Test User",
+        "waitlist_type": "subscription",
+        "created_at": "2026-04-06T13:53:42.341408+00:00"
+      },
+      "error": null
+    },
+    {
+      "test_name": "Create Waitlist Entry (founding-member)",
+      "method": "POST",
+      "endpoint": "waitlist",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "response_data": {
+        "id": "f0fcc165-1352-4192-b923-892274255406",
+        "email": "test2_135342@example.com",
+        "name": null,
+        "waitlist_type": "founding-member",
+        "created_at": "2026-04-06T13:53:42.462645+00:00"
+      },
+      "error": null
+    },
+    {
+      "test_name": "Duplicate Waitlist Entry",
+      "method": "POST",
+      "endpoint": "waitlist",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "response_data": {
+        "id": "c1eb4219-583d-4229-a1a6-06a5413ceffd",
+        "email": "test_135342@example.com",
+        "name": "Test User",
+        "waitlist_type": "subscription",
+        "created_at": "2026-04-06T13:53:42.341408+00:00"
+      },
+      "error": null
+    },
+    {
+      "test_name": "Get Waitlist Entries",
+      "method": "GET",
+      "endpoint": "waitlist",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "response_data": [
+        {
+          "id": "c1eb4219-583d-4229-a1a6-06a5413ceffd",
+          "email": "test_135342@example.com",
+          "name": "Test User",
+          "waitlist_type": "subscription",
+          "created_at": "2026-04-06T13:53:42.341408+00:00"
+        },
+        {
+          "id": "f0fcc165-1352-4192-b923-892274255406",
+          "email": "test2_135342@example.com",
+          "name": null,
+          "waitlist_type": "founding-member",
+          "created_at": "2026-04-06T13:53:42.462645+00:00"
+        }
+      ],
+      "error": null
+    }
+  ]
+}
