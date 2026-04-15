@@ -21,7 +21,7 @@ export function ProductProvider({ children }) {
     loaded: false,
   });
 
-  const fetchProducts = async () => {
+const fetchProducts = async () => {
   try {
     const res = await fetch(`${API}/products?t=${Date.now()}`, {
       cache: "no-store",
@@ -58,19 +58,18 @@ export function ProductProvider({ children }) {
     });
 
   } catch (err) {
-    console.warn("Skipping fallback — temporary fetch issue:", err);
+    console.warn("Using fallback static data:", err);
+
+    setProducts({
+      seasonHarvest: staticSeason,
+      villagePantry: staticPantry,
+      festiveCollection: staticFestive,
+      secretGardenBox: staticGarden,
+      featuredPantry: staticFeatured,
+      loaded: true,
+    });
   }
-      // fallback ONLY if API completely fails
-      setProducts({
-        seasonHarvest: staticSeason,
-        villagePantry: staticPantry,
-        festiveCollection: staticFestive,
-        secretGardenBox: staticGarden,
-        featuredPantry: staticFeatured,
-        loaded: true,
-      });
-    }
-  };
+};
 
   useEffect(() => {
     fetchProducts();
