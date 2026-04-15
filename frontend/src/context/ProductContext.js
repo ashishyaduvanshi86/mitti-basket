@@ -28,6 +28,7 @@ export function ProductProvider({ children }) {
       });
 
       const data = await res.json();
+      console.log("PRODUCT API RESPONSE:", data);
 
       const notHidden = (arr) =>
         (arr || []).filter(
