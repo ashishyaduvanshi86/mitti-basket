@@ -60,7 +60,6 @@ export function ProductProvider({ children }) {
   } catch (err) {
     console.warn("Skipping fallback — temporary fetch issue:", err);
   }
-};
       // fallback ONLY if API completely fails
       setProducts({
         seasonHarvest: staticSeason,
