@@ -7,18 +7,16 @@ router = APIRouter()
 
 @router.post("/verify-phone")
 async def verify_phone(payload: dict):
-    token = payload.get("token")
     phone = payload.get("phone")
 
-    if not token or not phone:
-        raise HTTPException(status_code=400, detail="Token and phone required")
-
-    # TODO: optional — verify token with MSG91 if needed later
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone required")
 
     verified_phones.update_one(
         {"phone": phone},
         {
             "$set": {
+                "phone": phone,
                 "verified": True,
                 "verified_at": datetime.utcnow(),
             }
@@ -27,6 +25,8 @@ async def verify_phone(payload: dict):
     )
 
     return {"status": "verified"}
+
+
 @router.post("/check-phone-verified")
 async def check_phone_verified(payload: dict):
     phone = payload.get("phone")
