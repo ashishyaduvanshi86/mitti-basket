@@ -9,7 +9,10 @@ import {
 
 const ProductContext = createContext(null);
 
-const API = process.env.REACT_APP_BACKEND_URL + "/api";
+const API =
+  process.env.REACT_APP_BACKEND_URL
+    ? process.env.REACT_APP_BACKEND_URL + "/api"
+    : "/api";
 
 export function ProductProvider({ children }) {
   const [products, setProducts] = useState({
