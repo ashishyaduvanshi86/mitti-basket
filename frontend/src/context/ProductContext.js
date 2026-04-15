@@ -22,37 +22,45 @@ export function ProductProvider({ children }) {
   });
 
   const fetchProducts = async () => {
-    try {
-      const res = await fetch(`${API}/products?t=${Date.now()}`, {
-        cache: "no-store",
-      });
+  try {
+    const res = await fetch(`${API}/products?t=${Date.now()}`, {
+      cache: "no-store",
+    });
 
-      const data = await res.json();
-      console.log("PRODUCT API RESPONSE:", data);
+    if (!res.ok) {
+      throw new Error("API response not OK");
+    }
 
-      const notHidden = (arr) =>
-        (arr || []).filter(
-          (p) => p.availability_status !== "HIDDEN"
-        );
+    const contentType = res.headers.get("content-type");
 
-      const season = notHidden(data.season_harvest);
-      const pantry = notHidden(data.village_pantry);
-      const festive = notHidden(data.festive);
-      const gardenArr = notHidden(data.secret_garden);
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Received HTML instead of JSON");
+    }
 
-      setProducts({
-        seasonHarvest: season,
-        villagePantry: pantry,
-        festiveCollection: festive,
-        secretGardenBox:
-          gardenArr.length > 0 ? gardenArr[0] : null,
-        featuredPantry: pantry.slice(0, 4),
-        loaded: true,
-      });
+    const data = await res.json();
 
-    } catch (err) {
-      console.error("Product fetch failed:", err);
+    console.log("PRODUCT API RESPONSE:", data);
 
+    const notHidden = (arr) =>
+      (arr || []).filter(
+        (p) => p.availability_status !== "HIDDEN"
+      );
+
+    setProducts({
+      seasonHarvest: notHidden(data.season_harvest),
+      villagePantry: notHidden(data.village_pantry),
+      festiveCollection: notHidden(data.festive),
+      secretGardenBox:
+        notHidden(data.secret_garden)[0] || null,
+      featuredPantry:
+        notHidden(data.village_pantry).slice(0, 4),
+      loaded: true,
+    });
+
+  } catch (err) {
+    console.warn("Skipping fallback — temporary fetch issue:", err);
+  }
+};
       // fallback ONLY if API completely fails
       setProducts({
         seasonHarvest: staticSeason,
