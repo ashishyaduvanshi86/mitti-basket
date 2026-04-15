@@ -6,10 +6,15 @@ import axios from "axios";
 import { useRef } from "react";
 
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = process.env.REACT_APP_BACKEND_URL
+  ? `${process.env.REACT_APP_BACKEND_URL}/api`
+  : "/api";
 
 export default function CartDrawer({ open, onOpenChange }) {
   const otpTimer = useRef(null);
+  useEffect(() => {
+  return () => clearTimeout(otpTimer.current);
+}, []);
   const { items, updateQuantity, removeItem, clearCart, subtotal, fmtQty, getItemPrice } = useCart();
   const [view, setView] = useState("cart");
   const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", pincode: "", city: "" });
@@ -66,35 +71,48 @@ useEffect(() => {
 
 const triggerOtpVerification = (mobile) => {
   const attemptInit = () => {
-  if (!window.initSendOTP) {
-    setTimeout(attemptInit, 300);
-    return;
-  }
-  if (document.getElementById("verify-modal")) {
+    if (!window.initSendOTP) {
+      setTimeout(attemptInit, 300);
+      return;
+    }
+
+    if (document.querySelector("[id*='verify']")) {
   return;
-  }
+}
 
-  window.initSendOTP({
-    widgetId: "36646e684d57323330313635",
-    tokenAuth: "508408Tl99Q27rW69ddfe00P1",
-    identifier: "91" + mobile,
-    countryCode: "91",
+    window.initSendOTP({
+      widgetId: "36646e684d57323330313635",
+      tokenAuth: "508408Tl99Q27rW69ddfe00P1",
+      identifier: "91" + mobile,
+      countryCode: "91",
 
-    success: async (data) => {
-      await axios.post(`${API}/verify-phone`, {
-        token: data.token,
-        phone: mobile,
-      });
+      success: async (data) => {
+        try {
+          await axios.post(`${API}/verify-phone`, {
+            token: data.token,
+            phone: mobile,
+          });
 
-      setPhoneVerified(true);
-      localStorage.setItem("verified_phone", mobile);
-    },
+          setPhoneVerified(true);
+          setOtpTriggered(false);
 
-    failure: () => {
-      setOtpTriggered(false);
-    },
-  });
-};
+          setForm((prev) => ({
+            ...prev,
+            phone: mobile,
+          }));
+
+          localStorage.setItem("verified_phone", mobile);
+
+        } catch (err) {
+          console.error("Phone verification save failed:", err);
+        }
+      },
+
+      failure: () => {
+        setOtpTriggered(false);
+      },
+    });
+  };
 
   attemptInit();
 };
@@ -108,13 +126,20 @@ const checkIfPhoneAlreadyVerified = async (phone) => {
   }
 };
   const handleCheckout = async (e) => {
-    e.preventDefault();
-    if (!phoneVerified) {
-  alert("Please verify your mobile number before placing order");
-  setSubmitting(false);
-  return;
-}
-    setSubmitting(true);
+  e.preventDefault();
+
+  setSubmitting(true);
+
+  const verifiedPhone = localStorage.getItem("verified_phone");
+
+  const normalizedFormPhone = form.phone?.replace(/\D/g, "");
+  const normalizedStoredPhone = verifiedPhone?.replace(/\D/g, "");
+
+  if (!phoneVerified &&(!normalizedStoredPhone ||normalizedStoredPhone !== normalizedFormPhone)) {
+    alert("Please verify your mobile number before placing order");
+    setSubmitting(false);
+    return;
+  }
     
 
     try {
@@ -249,7 +274,8 @@ setTimeout(() => {
 
   const resetAndClose = () => {
     setView("cart");
-    setForm({ name: "", phone: "", email: "", address: "", pincode: "", city: "" });    setCurrentOrderId(null);
+    setForm({name: "",phone: localStorage.getItem("verified_phone") || "",email: "",address: "",pincode: "",city: "",});    
+    setCurrentOrderId(null);
     onOpenChange(false);
   };
 
@@ -386,14 +412,17 @@ setTimeout(() => {
 
 if (value.length < 10) {
   setOtpTriggered(false);
-  setPhoneVerified(false);
+
+  if (localStorage.getItem("verified_phone") !== value) {
+    setPhoneVerified(false);
+  }
 }
 
 clearTimeout(otpTimer.current);
 
 otpTimer.current = setTimeout(async () => {
-  if (value.length === 10 && !otpTriggered) {
-    const alreadyVerified = await checkIfPhoneAlreadyVerified(value);
+if (value.length === 10 && !otpTriggered && !phoneVerified){
+      const alreadyVerified = await checkIfPhoneAlreadyVerified(value);
 
     if (alreadyVerified) {
       setPhoneVerified(true);
@@ -423,6 +452,7 @@ otpTimer.current = setTimeout(async () => {
         onClick={() => {
           setPhoneVerified(false);
           setOtpTriggered(false);
+          localStorage.removeItem("verified_phone");
           setForm({ ...form, phone: "" });
         }}
       >
