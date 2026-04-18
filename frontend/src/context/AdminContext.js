@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 
 const AdminContext = createContext(null);
 const API = process.env.REACT_APP_BACKEND_URL + "/api/admin";
+console.log("BACKEND URL:", process.env.REACT_APP_BACKEND_URL);
 
 export function AdminProvider({ children }) {
   const [admin, setAdmin] = useState(null);
