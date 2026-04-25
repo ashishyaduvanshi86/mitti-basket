@@ -1,17 +1,12 @@
-"""Public products API."""
 from fastapi import APIRouter
 from routes import db
+from bson import ObjectId
 
 router = APIRouter()
 
 
 @router.get("/products")
 async def get_public_products():
-    products = await db.products.find(
-        {"availability_status": {"$ne": "HIDDEN"}},
-        {"_id": 0}
-    ).sort("_id", 1).to_list(100)
-
     grouped = {
         "season_harvest": [],
         "village_pantry": [],
@@ -19,8 +14,14 @@ async def get_public_products():
         "secret_garden": [],
     }
 
-    for p in products:
+    cursor = db.products.find(
+        {"availability_status": {"$ne": "HIDDEN"}}
+    ).sort("_id", 1)  # ensures insertion order
+
+    async for p in cursor:
+        p.pop("_id", None)
         cat = p.get("category", "village_pantry")
+
         if cat in grouped:
             grouped[cat].append(p)
 
