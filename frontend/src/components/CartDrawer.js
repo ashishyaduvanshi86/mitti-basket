@@ -139,12 +139,17 @@ const checkIfPhoneAlreadyVerified = async (phone) => {
   const verifiedPhone = localStorage.getItem("verified_phone");
 
 const normalizedFormPhone = form.phone?.replace(/\D/g, "");
+
+if (!normalizedFormPhone || normalizedFormPhone.length !== 10) {
+  alert("Please enter a valid 10-digit phone number");
+  setSubmitting(false);
+  return;
+}
+
 const normalizedStoredPhone = verifiedPhone?.replace(/\D/g, "");
 
 if (!normalizedStoredPhone || normalizedStoredPhone !== normalizedFormPhone) {
-  alert("Please verify your mobile number before placing order");
-  setSubmitting(false);
-  return;
+  console.warn("Phone not verified yet — continuing checkout");
 }
     
 
